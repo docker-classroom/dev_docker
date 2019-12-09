@@ -1,0 +1,66 @@
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=/etc/vim/bundle/Vundle.vim
+call vundle#begin('/etc/vim/bundle')
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'scrooloose/nerdtree'
+
+" The following are examples of different formats supported.
+" Keep Plugin commands between vundle#begin/end.
+
+Plugin 'fatih/vim-go'
+Plugin 'guns/vim-clojure-static'
+Plugin 'kien/rainbow_parentheses.vim'
+Plugin 'guns/vim-clojure-highlight'
+Plugin 'groenewege/vim-less'
+Plugin 'derekwyatt/vim-scala'
+Plugin 'dylon/vim-antlr'
+Plugin 'altercation/vim-colors-solarized'
+
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+ 
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+
+let mapleader=","
+map <Leader>s :NERDTreeFind<CR>
+map <Leader>ns :NERDTreeClose<CR>
+map <Leader>o <ESC><C-W>_<CR>
+map <Leader>/ :set hlsearch!<CR>
+
+set textwidth=80
+set tabstop=4 shiftwidth=4 softtabstop=4
+set expandtab
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set nu
+set nowb
+set noswapfile
+set noar
+set showmatch
+"se spell
+set nospell
+
+let g:clojure_fuzzy_indent = 0
+au BufRead,BufNewFile *.g set filetype=antlr3
+au BufRead,BufNewFile *.g4 set filetype=antlr4
+
+syntax enable
+"set background=light
+"colorscheme solarized
