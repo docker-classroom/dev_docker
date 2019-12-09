@@ -1,0 +1,91 @@
+#!/bin/env python
+
+#docker run --rm -it \
+#	-e uid=`id -u` \
+#	-e uname=`id -un` \
+#	-e gid=`id -g` \
+#	-e gname=`id -gn` \
+#	-e password=abc \
+#	-p 8722:22 \
+#	-v $(PWD)/start.sh:/bin/start.sh \
+#	research/dev \
+#	/bin/start.sh
+
+import argparse
+import docker
+import dockerpty
+import getpass, pwd
+import os
+
+if __name__ == '__main__':
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-p', dest='password')
+        parser.add_argument('--port')
+        parser.add_argument('path', nargs='?', help='path to work on', default='.')
+
+        options = parser.parse_args()
+
+        target_ports = []
+        input_ports = []
+        if options.port:
+            pairs = options.port.split(",")
+            for pair in pairs:
+                if ':' in pair:
+                    a, b = pair.split(':')
+                else:
+                    a, b = pair
+                input_ports.append(int(a))
+                target_ports.append(int(b))
+
+        port_bindings = dict(zip(target_ports, input_ports))
+
+        print("======== opening port in container ==========")
+        print(target_ports)
+
+        print("======== Outside port into container ==========")
+        print(input_ports)
+
+        username = getpass.getuser()
+        user = pwd.getpwnam(username)
+        uid = user.pw_uid
+        gid = user.pw_gid
+
+        path = os.path.abspath(options.path)
+
+        if not os.path.isdir(path):
+            raise Exception("\"%s\" is not a directory.")
+
+        basename = os.path.basename(path)
+
+        target_path = os.path.join('/home', username, basename)
+
+        client = docker.APIClient()
+        container_id = client.create_container(
+                name='research_dev',
+                image='research/dev',
+                stdin_open=True,
+                tty=True,
+                command='/bin/start.sh',
+                environment=dict(
+                    uid=uid,
+                    gid=gid,
+                    uname=username,
+                    gname="docker_dev",
+                    password=options.password),
+                ports=target_ports,
+                volumes = [target_path],
+                host_config=client.create_host_config(binds={
+                    path: {
+                        'bind': target_path,
+                        'ro': False
+                        }
+                    },
+                    port_bindings=port_bindings),
+                )
+        dockerpty.start(client, container_id)
+        print("===== Container ended [%s] ========" % container_id['Id'])
+        client.remove_container(container_id)
+    except Exception as e:
+        print("> %s" % str(e))
+
