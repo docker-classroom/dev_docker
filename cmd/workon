@@ -23,7 +23,7 @@ if __name__ == '__main__':
         parser.add_argument('--password')
         parser.add_argument('--port')
         parser.add_argument('--name')
-        parser.add_argument('path', nargs='?', help='path to work on', default='.')
+        parser.add_argument('path', nargs='?', help='path to work on')
 
         options = parser.parse_args()
 
@@ -52,18 +52,22 @@ if __name__ == '__main__':
         uid = user.pw_uid
         gid = user.pw_gid
 
-        path = os.path.abspath(options.path)
-
         password = options.password or "abc"
         name = options.name or "research_dev"
         home_volume = "%s_home" % name
 
-        if not os.path.isdir(path):
-            raise Exception("\"%s\" is not a directory.")
+        binds = dict()
+        binds[home_volume] = dict(bind='/home', ro=False)
+        volumes = ['/home']
 
-        basename = os.path.basename(path)
-
-        target_path = os.path.join('/home', username, basename)
+        if options.path:
+            path = os.path.abspath(options.path)
+            if not os.path.isdir(path):
+                raise Exception("\"%s\" is not a directory.")
+            basename = os.path.basename(path)
+            target_path = os.path.join('/home', username, basename)
+            binds[path] = dict(bind=target_path, ro=False)
+            volumes.append(target_path)
 
         client = docker.APIClient()
         container_id = client.create_container(
@@ -79,18 +83,11 @@ if __name__ == '__main__':
                     gname="docker_dev",
                     password=password),
                 ports=target_ports,
-                volumes = ['/home', target_path],
-                host_config=client.create_host_config(binds={
-                    path: {
-                        'bind': target_path,
-                        'ro': False
-                        },
-                    home_volume: {
-                        'bind': '/home',
-                        'ro': False
-                        }
-                    },
-                    port_bindings=port_bindings),
+                volumes = volumes,
+                host_config=client.create_host_config(
+                    binds=binds,
+                    port_bindings=port_bindings,
+                    ),
                 )
         dockerpty.start(client, container_id)
         print("===== Container ended [%s] ========" % container_id['Id'])

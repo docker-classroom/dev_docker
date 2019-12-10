@@ -1,0 +1,8 @@
+{"argv": [
+    "java",
+      "-cp",
+      "/usr/local/share/jupyter/kernels/clojure/clojupyter-standalone.jar",
+      "clojupyter.kernel.core",
+      "{connection_file}" ],
+ "display_name": "Clojure",
+ "language": "clojure"}
