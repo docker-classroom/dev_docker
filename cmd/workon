@@ -20,8 +20,9 @@ import os
 if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser()
-        parser.add_argument('-p', dest='password')
+        parser.add_argument('--password')
         parser.add_argument('--port')
+        parser.add_argument('--name')
         parser.add_argument('path', nargs='?', help='path to work on', default='.')
 
         options = parser.parse_args()
@@ -53,6 +54,10 @@ if __name__ == '__main__':
 
         path = os.path.abspath(options.path)
 
+        password = options.password or "abc"
+        name = options.name or "research_dev"
+        home_volume = "%s_home" % name
+
         if not os.path.isdir(path):
             raise Exception("\"%s\" is not a directory.")
 
@@ -62,7 +67,7 @@ if __name__ == '__main__':
 
         client = docker.APIClient()
         container_id = client.create_container(
-                name='research_dev',
+                name=name,
                 image='research/dev',
                 stdin_open=True,
                 tty=True,
@@ -72,12 +77,16 @@ if __name__ == '__main__':
                     gid=gid,
                     uname=username,
                     gname="docker_dev",
-                    password=options.password),
+                    password=password),
                 ports=target_ports,
-                volumes = [target_path],
+                volumes = ['/home', target_path],
                 host_config=client.create_host_config(binds={
                     path: {
                         'bind': target_path,
+                        'ro': False
+                        },
+                    home_volume: {
+                        'bind': '/home',
                         'ro': False
                         }
                     },
