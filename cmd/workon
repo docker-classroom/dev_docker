@@ -69,6 +69,10 @@ if __name__ == '__main__':
             binds[path] = dict(bind=target_path, ro=False)
             volumes.append(target_path)
 
+        devices = [
+                "/dev/nvidia0:/dev/nvidia0",
+                ]
+
         client = docker.APIClient()
         container_id = client.create_container(
                 name=name,
@@ -87,6 +91,7 @@ if __name__ == '__main__':
                 host_config=client.create_host_config(
                     binds=binds,
                     port_bindings=port_bindings,
+                    devices=devices,
                     ),
                 )
         dockerpty.start(client, container_id)
